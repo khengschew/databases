@@ -4,12 +4,12 @@ module.exports = {
   messages: {
     get: function (req, res) {
       models.messages.get(result => {
-        res.status(200).send(result);
+        res.status(200).send({results:result});
       });
     },
     post: function (req, res) {
       models.messages.post(req.body, result => {
-        res.status(201).send();
+        res.status(201).send(result);
       });
     } // a function which handles posting a message to the database
   },
@@ -18,7 +18,7 @@ module.exports = {
     // Ditto as above
     get: function (req, res) {
       models.users.get(result => {
-        res.status(200).send(result);
+        res.status(200).send({results:result});
       });
     },
     post: function (req, res) {

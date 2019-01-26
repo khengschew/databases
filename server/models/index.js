@@ -17,7 +17,7 @@ var sendQueryAsync = (query) => {
 module.exports = {
   messages: {
     get: done => {
-      var query = `SELECT u.name AS username, r.name AS roomname, m.text AS text, m.createdAt AS createdAt, m.updatedAt as updatedAt FROM messages m, user u, room r WHERE m.userId = u.id AND m.roomId = r.id`;
+      var query = `SELECT m.id AS objectId, u.name AS username, r.name AS roomname, m.text AS text, m.createdAt AS createdAt, m.updatedAt as updatedAt FROM messages m, user u, room r WHERE m.userId = u.id AND m.roomId = r.id`;
       db.sendQuery(query, (err, result, fields) => {
         if (err) {
           throw err;
@@ -66,7 +66,10 @@ module.exports = {
           query = `INSERT INTO messages (userId, roomId, text, createdAt, updatedAt) VALUES (${userId}, ${roomId}, "${message.text}", CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP());`;
           return sendQueryAsync(query);
         })
-        .then((result) => callback(result))
+        .then((result) => {
+          console.log({objectId:result.insertId});
+          callback({objectId:result.insertId});
+        })
         .catch(err => console.error(err));
       
     } // a function which can be used to insert a message into the database
