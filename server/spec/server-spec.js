@@ -100,6 +100,77 @@ describe('Persistent Node Chat Server', function() {
       });
     });
   });
+
+  it('Should insert a new room to the DB when there is no matching room', function(done) {
+    // Post a message to the node chat server:
+    request({
+      method: 'POST',
+      uri: 'http://127.0.0.1:3000/classes/messages',
+      json: {
+        username: 'Good Tester',
+        text: 'This will hopefully break your code',
+        roomname: 'Breakers'
+      }
+    }, function () {
+      // Now if we look in the database, we should find the
+      // posted message there.
+
+      // TODO: You might have to change this test to get all the data from
+      // your message table, since this is schema-dependent.
+      var queryString = 'SELECT * FROM room';
+      var queryArgs = [];
+
+      dbConnection.query(queryString, queryArgs, function(err, results) {
+        // Should have one result:
+        expect(results.length).to.equal(1);
+
+        done();
+      });
+    });
+  });
+
+
+  it('Should insert a new message even when user and room is not in database', function(done) {
+    // Post a message to the node chat server:
+    request({
+      method: 'POST',
+      uri: 'http://127.0.0.1:3000/classes/messages',
+      json: {
+        username: 'Very Good Tester',
+        text: 'This will definitely hopefully break your code',
+        roomname: 'Bad Breakers'
+      }
+    }, function () {
+      // Now if we look in the database, we should find the
+      // posted message there.
+
+      // TODO: You might have to change this test to get all the data from
+      // your message table, since this is schema-dependent.
+      var queryString = 'SELECT * FROM room';
+      var queryArgs = [];
+
+      dbConnection.query(queryString, queryArgs, function(err, results) {
+        // Should have one result:
+        expect(results.length).to.equal(1);
+        queryString = 'SELECT * FROM user';
+  
+        dbConnection.query(queryString, queryArgs, function(err, results) {
+          // Should have one result:
+          expect(results.length).to.equal(1);
+    
+          request('http://127.0.0.1:3000/classes/messages', function(error, response, body) {
+            // Should have one result:
+            var results = JSON.parse(body).results;
+            expect(results.length).to.equal(1);
+            expect(results[0].text).to.equal('This will definitely hopefully break your code');
+            expect(results[0].roomname).to.equal('Bad Breakers');
+            expect(results[0].username).to.equal('Very Good Tester');
+            done();
+          });
+        });
+      });
+    });
+  });
 });
 
 /*
