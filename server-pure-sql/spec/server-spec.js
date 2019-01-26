@@ -17,12 +17,23 @@ describe('Persistent Node Chat Server', function() {
     });
     dbConnection.connect();
 
+    /*
+    select * from information_schema.key_column_usage where table_name = "messages" limit 10;
+    */
+   
+    var constraints = ['messages_ibfk_1', 'messages_ibfk_2'];
+    dbConnection.query('ALTER TABLE messages DROP FOREIGN KEY ' + constraints[0]);
+    dbConnection.query('ALTER TABLE messages DROP FOREIGN KEY ' + constraints[1]);
+
     //var tablename = "TABLE_NAME from INFORMATION_SCHEMA.TABLES where TABLE_NAME in ('messages','user','room')"; // TODO: fill this out
     var tables = ['messages', 'user', 'room'];
 
     dbConnection.query('truncate ' + tables[0]);
     dbConnection.query('truncate ' + tables[1]);
     dbConnection.query('truncate ' + tables[2], done);
+
+    dbConnection.query('ALTER TABLE messages ADD CONSTRAINT ' + constraints[0] + ' FOREIGN KEY messages(userId) REFERENCES user(id) ON DELETE CASCADE');
+    dbConnection.query('ALTER TABLE messages ADD CONSTRAINT ' + constraints[1] + ' FOREIGN KEY messages(roomId) REFERENCES room(id) ON DELETE CASCADE');
 
     /* Empty the db table before each test so that multiple tests
      * (or repeated runs of the tests) won't screw each other up: */
