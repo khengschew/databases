@@ -24,19 +24,20 @@ CREATE TABLE messages (
   createdAt timestamp NULL,
   updatedAt timestamp NULL,
   PRIMARY KEY (id),
-  FOREIGN KEY (userId)
-    REFERENCES user(id)
-    ON DELETE CASCADE,
-  FOREIGN KEY (roomId)
-    REFERENCES room(id)
-    ON DELETE CASCADE,
   INDEX (userId),
   INDEX (roomId)
 );
 
 /* Create other tables and define schemas for them here! */
 
-
+/*
+  FOREIGN KEY `fk_userId` (userId)
+    REFERENCES user(id)
+    ON DELETE CASCADE,
+  FOREIGN KEY `fk_roomId` (roomId)
+    REFERENCES room(id)
+    ON DELETE CASCADE,
+*/
 
 
 /*  Execute this file from the command line by typing:

@@ -12,15 +12,21 @@ describe('Persistent Node Chat Server', function() {
     dbConnection = mysql.createConnection({
       user: 'student',
       password: 'student',
-      database: 'chat'
+      database: 'chat',
+      multipleStatements: true
     });
     dbConnection.connect();
 
-       var tablename = ""; // TODO: fill this out
+    //var tablename = "TABLE_NAME from INFORMATION_SCHEMA.TABLES where TABLE_NAME in ('messages','user','room')"; // TODO: fill this out
+    var tables = ['messages', 'user', 'room'];
+
+    dbConnection.query('truncate ' + tables[0]);
+    dbConnection.query('truncate ' + tables[1]);
+    dbConnection.query('truncate ' + tables[2], done);
 
     /* Empty the db table before each test so that multiple tests
      * (or repeated runs of the tests) won't screw each other up: */
-    dbConnection.query('truncate ' + tablename, done);
+    //dbConnection.query('truncate ' + tablename, done);
   });
 
   afterEach(function() {
@@ -40,7 +46,7 @@ describe('Persistent Node Chat Server', function() {
         uri: 'http://127.0.0.1:3000/classes/messages',
         json: {
           username: 'Valjean',
-          message: 'In mercy\'s name, three days is all I need.',
+          text: 'In mercy\'s name, three days is all I need.',
           roomname: 'Hello'
         }
       }, function () {
@@ -67,8 +73,10 @@ describe('Persistent Node Chat Server', function() {
 
   it('Should output all messages from the DB', function(done) {
     // Let's insert a message into the db
-       var queryString = "";
-       var queryArgs = [];
+    var queryString = 'INSERT INTO user (name) VALUES ("testuser");';
+    queryString += 'INSERT INTO room (name) VALUES ("main");';
+    queryString += 'INSERT INTO messages (userId, roomId, text, createdAt, updatedAt) VALUES (1, 1, "Men like you can never change!", CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP());';
+    var queryArgs = [];
     // TODO - The exact query string and query args to use
     // here depend on the schema you design, so I'll leave
     // them up to you. */
