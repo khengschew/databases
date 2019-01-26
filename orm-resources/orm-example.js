@@ -4,20 +4,61 @@
  */
 
 var Sequelize = require('sequelize');
-var db = new Sequelize('chatter', 'root', '');
+var db = new Sequelize('chat', 'student', 'student');
 /* TODO this constructor takes the database name, username, then password.
  * Modify the arguments if you need to */
 
 /* first define the data structure by giving property names and datatypes
  * See http://sequelizejs.com for other datatypes you can use besides STRING. */
-var User = db.define('User', {
-  username: Sequelize.STRING
+var User = db.define('user', {
+  id: {
+    type: Sequalize.INTEGER,
+    autoIncrement: true,
+    primaryKey: true
+  },
+  name: Sequelize.STRING
 });
 
-var Message = db.define('Message', {
-  userid: Sequelize.INTEGER,
+var Room = db.define('room', {
+  id: {
+    type: Sequalize.INTEGER,
+    autoIncrement: true,
+    primaryKey: true
+  },
+  name: Sequelize.STRING
+});
+
+var Messages = db.define('messages', {
+  id: {
+    type: Sequalize.INTEGER,
+    autoIncrement: true,
+    primaryKey: true
+  },
+  userId: {
+    type: Sequelize.INTEGER,
+    references: {
+      model: User,
+      key: id
+    }
+  },
+  roomId: {
+    type: Sequelize.INTEGER,
+    references: {
+      model: Room,
+      key: id
+    }
+  },
   text: Sequelize.STRING,
-  roomname: Sequelize.STRING
+  createdAt: {
+    type: 'TIMESTAMP',
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+    allowNull: false
+  },
+  updatedAt: {
+    type: 'TIMESTAMP',
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+    allowNull: false
+  }
 });
 
 /* Sequelize comes with built in support for promises

@@ -16,16 +16,11 @@ describe('Persistent Node Chat Server', function() {
       multipleStatements: true
     });
     dbConnection.connect();
-
-    /*
-    select * from information_schema.key_column_usage where table_name = "messages" limit 10;
-    */
    
     var constraints = ['messages_ibfk_1', 'messages_ibfk_2'];
     dbConnection.query('ALTER TABLE messages DROP FOREIGN KEY ' + constraints[0]);
     dbConnection.query('ALTER TABLE messages DROP FOREIGN KEY ' + constraints[1]);
 
-    //var tablename = "TABLE_NAME from INFORMATION_SCHEMA.TABLES where TABLE_NAME in ('messages','user','room')"; // TODO: fill this out
     var tables = ['messages', 'user', 'room'];
 
     dbConnection.query('truncate ' + tables[0]);
@@ -106,3 +101,11 @@ describe('Persistent Node Chat Server', function() {
     });
   });
 });
+
+/*
+// This comment will help find foreign key names
+select * from information_schema.key_column_usage where table_name = "messages" limit 10;
+
+// This comment will help text POST requests
+curl -H 'Content-Type: application/json' -X POST -d '{"username":"tester10", "roomname":"lobby", "text":"hello there"}' 127.0.0.1:3000/classes/messages
+*/

@@ -17,92 +17,122 @@ var sendQueryAsync = (query) => {
 module.exports = {
   messages: {
     get: done => {
-      var query = `SELECT m.id AS objectId, u.name AS username, r.name AS roomname, m.text AS text, m.createdAt AS createdAt, m.updatedAt as updatedAt FROM messages m, user u, room r WHERE m.userId = u.id AND m.roomId = r.id`;
-      db.sendQuery(query, (err, result, fields) => {
-        if (err) {
-          throw err;
-        } else {
-          done(result);
-        }
-      });
+      db.User.sync()
+        .then(() => {
+          return db.Messages.findAll({
+            include: [db.Room, db.User]
+          });
+        })
+        .then((results) => {
+          var messageLog = results.map(result => {
+            var message = result.dataValues;
+            message.roomname = message.room.name;
+            message.username = message.user.name;
+            message.objectId = message.id;
+            return message;
+          });
+          done(messageLog);
+        })
+        .catch(err => {
+          console.error(err);
+        });
     },
-    post: (message, callback) => {
-      var query = `SELECT id FROM user WHERE name = "${message.username}";`;
-      var userId = sendQueryAsync(query)
-        .then((result) => {
+    post: (message, done) => {   
+      var userId = db.User.sync()
+        .then(() => {
+          return db.User.findAll({
+            where: { name: message.username }
+          });
+        })
+        .then(result => {
           if (result.length === 0) {
-            query = `INSERT INTO user (name) VALUES ("${message.username}");`;
-            return sendQueryAsync(query);
+            return db.User.create({
+              name: message.username
+            });
           } else {
-            return result[0].id;
+            return result[0];
           }
         })
         .then((result) => {
-          if (typeof result !== 'number') {
-            result = result.insertId;
-          }
-          return result;
+          return result.dataValues.id;
+        })
+        .catch(err => {
+          console.error(err);
         });
 
-      query = `SELECT id FROM room WHERE name = "${message.roomname}";`;
-      var roomId = sendQueryAsync(query)
-        .then((result) => {
+      var roomId = db.Room.sync()
+        .then(() => {
+          return db.Room.findAll({
+            where: { name: message.roomname }
+          });
+        })
+        .then(result => {
           if (result.length === 0) {
-            query = `INSERT INTO room (name) VALUES ("${message.roomname}");`;
-            return sendQueryAsync(query);
+            return db.Room.create({
+              name: message.roomname
+            });
           } else {
-            return result[0].id;
+            return result[0];
           }
         })
         .then((result) => {
-          if (typeof result !== 'number') {
-            result = result.insertId;
-          }
-          return result;
+          return result.dataValues.id;
+        })
+        .catch(err => {
+          console.error(err);
         });
 
-      return Promise.all([userId, roomId])
+      Promise.all([userId, roomId])
         .then(([userId, roomId]) => {
-          query = `INSERT INTO messages (userId, roomId, text, createdAt, updatedAt) VALUES (${userId}, ${roomId}, "${message.text}", CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP());`;
-          return sendQueryAsync(query);
+          return db.Messages.create({
+            userId: userId,
+            roomId: roomId,
+            text: message.text
+          });
         })
         .then((result) => {
-          console.log({objectId:result.insertId});
-          callback({objectId:result.insertId});
+          done({objectId:result.dataValues.id});
         })
         .catch(err => console.error(err));
-      
-    } // a function which can be used to insert a message into the database
+    }
   },
 
   users: {
-    // Ditto as above.
     get: done => {
-      var query = `SELECT * FROM user`;
-      db.sendQuery(query, (err, result, fields) => {
-        if (err) {
-          throw err;
-        } else {
-          done(result);
-        }
-      });
+      db.User.sync()
+        .then(() => {
+          return db.User.findAll();
+        })
+        .then((results) => {
+          done(results);
+        })
+        .catch(err => {
+          console.error(err);
+        });
     },
-    post: username => {
-      var query = `SELECT COUNT(id) as cnt FROM user WHERE name = "${username}";`;
-      db.sendQuery(query, (err, result, fields) => {
-        if (err || result[0].cnt > 0) {
-          throw err;
-        } else {
-          query = `INSERT INTO user (name) VALUES ("${username}");`;
-          db.sendQuery(query, (err) => {
-            if (err) {
-              throw err;
-            } else {
-              // console.log(`User ${username} successfully created.`);
-            }
+    post: (username, done) => {
+      db.User.sync()
+        .then(() => {
+          return db.User.findAndCountAll({
+            where: { name: username }
           });
-        }
-      });
+        })
+        .then(result => {
+          if (result.count > 0) {
+            throw 'ERROR: that user already exists.';
+          }
+        })
+        .then(() => {
+          return db.User.create({
+            name: username
+          });
+        })
+        .then((results) => {
+          done(results.dataValues.id);
+        })
+        .catch(err => {
+          console.error(err);
+        });
     }
   }
 };

@@ -22,8 +22,9 @@ module.exports = {
       });
     },
     post: function (req, res) {
-      models.users.post(req.body.username);
-      res.status(201).send();
+      models.users.post(req.body.username, (userId) => {
+        res.status(201).send({userId:userId});
+      });
     }
   }
 };
